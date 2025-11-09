@@ -75,7 +75,25 @@ function populateWaitingMonthOptions() {
         
         // 触发change事件以加载数据
         if (availableMonths.length > 0) {
-            updateWaitingDescription();
+            // 如果scoreData已经加载，直接加载数据；否则等待scoreData加载完成
+            if (scoreData && scoreData.length > 0) {
+                updateWaitingDescription();
+            } else {
+                // 等待scoreData加载完成，最多等待5秒
+                let checkCount = 0;
+                const maxChecks = 50; // 5秒 = 50 * 100ms
+                const checkInterval = setInterval(() => {
+                    checkCount++;
+                    if (scoreData && scoreData.length > 0) {
+                        clearInterval(checkInterval);
+                        updateWaitingDescription();
+                    } else if (checkCount >= maxChecks) {
+                        clearInterval(checkInterval);
+                        // 即使scoreData未加载，也更新描述，但不会执行分析
+                        updateWaitingDescription();
+                    }
+                }, 100);
+            }
         }
     });
 }
@@ -117,7 +135,7 @@ function updateWaitingDescription() {
     const year = selectedMonth.split('-')[0];
     const month = selectedMonth.split('-')[1];
     if (description) {
-        description.textContent = `将分析${year}年${month}月减刑假释推荐表中人员在该月份之后6个月内的扣分情况`;
+        description.textContent = `将分析${year}年${month}月减刑假释推荐表中人员在考核期止日前半年和止日后五个月的扣分情况`;
     }
     
     // 根据选择的月份加载对应的推荐榜数据
@@ -146,8 +164,23 @@ function loadRecommendationDataForMonth(selectedMonth) {
             
             recommendationData = validData;
             
-            if (recommendationData.length > 0 && scoreData.length > 0) {
+            // 如果scoreData已经加载，立即执行分析；否则等待scoreData加载完成
+            if (recommendationData.length > 0 && scoreData && scoreData.length > 0) {
                 performWaitingAnalysis();
+            } else if (recommendationData.length > 0) {
+                // 等待scoreData加载完成，最多等待5秒
+                let checkCount = 0;
+                const maxChecks = 50; // 5秒 = 50 * 100ms
+                const checkInterval = setInterval(() => {
+                    checkCount++;
+                    if (scoreData && scoreData.length > 0) {
+                        clearInterval(checkInterval);
+                        performWaitingAnalysis();
+                    } else if (checkCount >= maxChecks) {
+                        clearInterval(checkInterval);
+                        console.warn('等待scoreData加载超时，无法执行分析');
+                    }
+                }, 100);
             }
         })
         .catch(error => {

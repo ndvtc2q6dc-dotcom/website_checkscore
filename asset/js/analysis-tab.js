@@ -27,7 +27,7 @@ function updateTimeRangeDescription() {
     var filterCondition = document.getElementById('filterCondition').value;
     var description = document.getElementById('timeRangeDescription');
     
-    var timeDesc = timeRangeType === 'recent' ? '八个月前至今' : '一年两个月至今';
+    var timeDesc = timeRangeType === 'recent' ? '考核期止日前半年至今' : '考核期止日前一年至今';
     
     if (filterCondition === 'lifesentence') {
         description.textContent = '将分析余刑为无期的人员';
@@ -284,7 +284,7 @@ function parseQualificationDate(conclusionText) {
 // 生成分析报告
 function generateAnalysisReport(analysisResults, qualifiedPersons, timeRangeType, minDeductionCount) {
     const now = new Date();
-    const timeRangeDesc = timeRangeType === 'recent' ? '八个月前至今' : '一年两个月至今';
+    const timeRangeDesc = timeRangeType === 'recent' ? '考核期止日前半年至今' : '考核期止日前一年至今';
     const filterCondition = document.getElementById('filterCondition').value;
     const isLifeSentence = filterCondition === 'lifesentence';
     
