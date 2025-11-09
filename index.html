@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>减刑预警工具</title>
+    <!-- Favicon设置 -->
+    <link rel="icon" href="asset/images/icon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="asset/images/icon.ico" type="image/x-icon">
+    <link rel="icon" href="asset/images/icon.ico" sizes="16x16" type="image/x-icon">
+    <link rel="icon" href="asset/images/icon.ico" sizes="32x32" type="image/x-icon">
+    <link rel="apple-touch-icon" href="asset/images/icon.ico">
+    <meta name="msapplication-TileImage" content="asset/images/icon.ico">
+    <meta name="theme-color" content="#1e40af">
+    <!-- 强制刷新favicon -->
+    <script>
+        // 强制刷新favicon
+        setTimeout(function() {
+            var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            link.href = 'asset/images/icon.ico?' + new Date().getTime();
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }, 100);
+    </script>
+    <!-- 外部 CSS 样式 -->
+    <link rel="stylesheet" href="asset/css/style.css">
+    
+    <!-- 兼容性提示 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.jsdelivr.net/npm/es5-shim@4.5.15/es5-shim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es5-shim@4.5.15/es5-sham.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/respond@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+    
+    <!-- 兼容性处理 -->
+    <script>
+        // 为低版本浏览器添加兼容性支持
+        (function() {
+            // 添加 Array.includes 的 polyfill
+            if (!Array.prototype.includes) {
+                Array.prototype.includes = function(searchElement) {
+                    for (var i = 0; i < this.length; i++) {
+                        if (this[i] === searchElement) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+            }
+            
+            // 添加 String.includes 的 polyfill
+            if (!String.prototype.includes) {
+                String.prototype.includes = function(search, start) {
+                    if (typeof start !== 'number') {
+                        start = 0;
+                    }
+                    if (start + search.length > this.length) {
+                        return false;
+                    } else {
+                        return this.indexOf(search, start) !== -1;
+                    }
+                };
+            }
+            
+            // 添加 Object.keys 的 polyfill
+            if (!Object.keys) {
+                Object.keys = (function() {
+                    var hasOwnProperty = Object.prototype.hasOwnProperty,
+                        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+                        dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'],
+                        dontEnumsLength = dontEnums.length;
+                    return function(obj) {
+                        if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+                            throw new TypeError('Object.keys called on non-object');
+                        }
+                        var result = [], prop, i;
+                        for (prop in obj) {
+                            if (hasOwnProperty.call(obj, prop)) {
+                                result.push(prop);
+                            }
+                        }
+                        if (hasDontEnumBug) {
+                            for (i = 0; i < dontEnumsLength; i++) {
+                                if (hasOwnProperty.call(obj, dontEnums[i])) {
+                                    result.push(dontEnums[i]);
+                                }
+                            }
+                        }
+                        return result;
+                    };
+                }());
+            }
+            
+            // 添加 String.padStart 的 polyfill
+            if (!String.prototype.padStart) {
+                String.prototype.padStart = function(targetLength, padString) {
+                    targetLength = targetLength >> 0;
+                    padString = String(typeof padString !== 'undefined' ? padString : ' ');
+                    if (this.length > targetLength) {
+                        return String(this);
+                    } else {
+                        targetLength = targetLength - this.length;
+                        if (targetLength > padString.length) {
+                            padString += padString.repeat(targetLength / padString.length);
+                        }
+                        return padString.slice(0, targetLength) + String(this);
+                    }
+                };
+            }
+            
+            // 添加 String.repeat 的 polyfill（padStart需要）
+            if (!String.prototype.repeat) {
+                String.prototype.repeat = function(count) {
+                    if (this == null) {
+                        throw new TypeError('can\'t convert ' + this + ' to object');
+                    }
+                    var str = '' + this;
+                    count = +count;
+                    if (count != count) {
+                        count = 0;
+                    }
+                    if (count < 0) {
+                        throw new RangeError('repeat count must be non-negative');
+                    }
+                    if (count == Infinity) {
+                        throw new RangeError('repeat count must be less than infinity');
+                    }
+                    count = Math.floor(count);
+                    if (str.length == 0 || count == 0) {
+                        return '';
+                    }
+                    if (str.length * count >= 1 << 28) {
+                        throw new RangeError('repeat count must not overflow maximum string size');
+                    }
+                    var rpt = '';
+                    for (var i = 0; i < count; i++) {
+                        rpt += str;
+                    }
+                    return rpt;
+                };
+            }
+            
+            // 添加 Element.remove 的 polyfill
+            if (!Element.prototype.remove) {
+                Element.prototype.remove = function() {
+                    if (this.parentNode) {
+                        this.parentNode.removeChild(this);
+                    }
+                };
+            }
+            
+            // 添加 Array.from 的 polyfill
+            if (!Array.from) {
+                Array.from = function(arrayLike, mapFn, thisArg) {
+                    var C = this;
+                    var items = Object(arrayLike);
+                    if (arrayLike == null) {
+                        throw new TypeError('Array.from requires an array-like object - not null or undefined');
+                    }
+                    var mapFunction = mapFn !== undefined ? mapFn : undefined;
+                    var T;
+                    if (typeof mapFn === 'function') {
+                        if (arguments.length > 2) {
+                            T = thisArg;
+                        }
+                    }
+                    var len = parseInt(items.length) || 0;
+                    var A = typeof C === 'function' ? Object(new C(len)) : new Array(len);
+                    var k = 0;
+                    var kValue;
+                    while (k < len) {
+                        kValue = items[k];
+                        if (mapFunction) {
+                            A[k] = typeof T === 'undefined' ? mapFunction(kValue, k) : mapFunction.call(T, kValue, k);
+                        } else {
+                            A[k] = kValue;
+                        }
+                        k += 1;
+                    }
+                    A.length = len;
+                    return A;
+                };
+            }
+            
+            // 添加 Array.find 的 polyfill
+            if (!Array.prototype.find) {
+                Array.prototype.find = function(predicate) {
+                    if (this == null) {
+                        throw new TypeError('Array.prototype.find called on null or undefined');
+                    }
+                    if (typeof predicate !== 'function') {
+                        throw new TypeError('predicate must be a function');
+                    }
+                    var list = Object(this);
+                    var length = parseInt(list.length) || 0;
+                    var thisArg = arguments[1];
+                    var value;
+                    for (var i = 0; i < length; i++) {
+                        value = list[i];
+                        if (predicate.call(thisArg, value, i, list)) {
+                            return value;
+                        }
+                    }
+                    return undefined;
+                };
+            }
+            
+            // 添加 Array.filter 的 polyfill（如果不存在）
+            if (!Array.prototype.filter) {
+                Array.prototype.filter = function(fun, thisArg) {
+                    if (this === void 0 || this === null) {
+                        throw new TypeError();
+                    }
+                    var t = Object(this);
+                    var len = parseInt(t.length) || 0;
+                    if (typeof fun !== 'function') {
+                        throw new TypeError();
+                    }
+                    var res = [];
+                    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+                    for (var i = 0; i < len; i++) {
+                        if (i in t) {
+                            var val = t[i];
+                            if (fun.call(thisArg, val, i, t)) {
+                                res.push(val);
+                            }
+                        }
+                    }
+                    return res;
+                };
+            }
+            
+            // 添加 Array.forEach 的 polyfill（如果不存在）
+            if (!Array.prototype.forEach) {
+                Array.prototype.forEach = function(callback, thisArg) {
+                    var T, k;
+                    if (this == null) {
+                        throw new TypeError('this is null or not defined');
+                    }
+                    var O = Object(this);
+                    var len = parseInt(O.length) || 0;
+                    if (typeof callback !== 'function') {
+                        throw new TypeError(callback + ' is not a function');
+                    }
+                    if (arguments.length > 1) {
+                        T = thisArg;
+                    }
+                    k = 0;
+                    while (k < len) {
+                        var kValue;
+                        if (k in O) {
+                            kValue = O[k];
+                            callback.call(T, kValue, k, O);
+                        }
+                        k++;
+                    }
+                };
+            }
+            
+            // 添加 Array.reduce 的 polyfill（如果不存在）
+            if (!Array.prototype.reduce) {
+                Array.prototype.reduce = function(callback, initialValue) {
+                    if (this === null || this === undefined) {
+                        throw new TypeError('Array.prototype.reduce called on null or undefined');
+                    }
+                    if (typeof callback !== 'function') {
+                        throw new TypeError(callback + ' is not a function');
+                    }
+                    var t = Object(this);
+                    var len = parseInt(t.length) || 0;
+                    var k = 0;
+                    var value;
+                    if (arguments.length >= 2) {
+                        value = arguments[1];
+                    } else {
+                        while (k < len && !(k in t)) {
+                            k++;
+                        }
+                        if (k >= len) {
+                            throw new TypeError('Reduce of empty array with no initial value');
+                        }
+                        value = t[k++];
+                    }
+                    while (k < len) {
+                        if (k in t) {
+                            value = callback(value, t[k], k, t);
+                        }
+                        k++;
+                    }
+                    return value;
+                };
+            }
+            
+            // 添加 Array.map 的 polyfill（如果不存在）
+            if (!Array.prototype.map) {
+                Array.prototype.map = function(callback, thisArg) {
+                    var T, A, k;
+                    if (this == null) {
+                        throw new TypeError('this is null or not defined');
+                    }
+                    var O = Object(this);
+                    var len = parseInt(O.length) || 0;
+                    if (typeof callback !== 'function') {
+                        throw new TypeError(callback + ' is not a function');
+                    }
+                    if (arguments.length > 1) {
+                        T = thisArg;
+                    }
+                    A = new Array(len);
+                    k = 0;
+                    while (k < len) {
+                        var kValue, mappedValue;
+                        if (k in O) {
+                            kValue = O[k];
+                            mappedValue = callback.call(T, kValue, k, O);
+                            A[k] = mappedValue;
+                        }
+                        k++;
+                    }
+                    return A;
+                };
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="admin-toggle">
+                <button class="visitor-btn" onclick="showLoginForm()" id="loginBtn">管理员登录</button>
+                <button class="admin-btn" onclick="logout()" id="logoutBtn" style="display: none;">退出管理员</button>
+            </div>
+            <div class="header-content">
+                <img src="asset/images/icon.ico" alt="系统图标" class="header-icon">
+                <h1>减刑预警工具</h1>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab visitor-only" onclick="switchTab('analysis')">
+                考核期扣分
+            </button>
+            <button class="tab visitor-only" onclick="switchTab('waiting')">
+                待裁定罪犯扣分情况
+            </button>
+            <button class="tab visitor-only" onclick="switchTab('screening')">
+                减刑筛查数据
+            </button>
+            <button class="tab visitor-only" onclick="switchTab('score')">
+                加扣分公示表
+            </button>
+            <button class="tab visitor-only" onclick="switchTab('guidance')">
+                刑务工作指引
+            </button>
+            <button class="tab admin-only" onclick="switchTab('upload')">
+                文件上传转换
+            </button>
+        </div>
+
+        <!-- 考核期扣分标签页 -->
+        <div id="analysis-tab" class="tab-content visitor-only">
+            <div class="visitor-notice visitor-only" id="visitorNotice">
+                <div class="notice-content">
+                    <strong>访客模式：</strong>您当前以访客身份访问系统，只能查看数据。如需进入管理功能，请联系管理员获取权限。
+                    <div class="countdown-timer" id="countdownTimer" style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                        <span id="countdownText">6秒后自动关闭</span>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeVisitorNotice()" title="关闭提示">×</button>
+            </div>
+            <div class="search-section" style="margin: 4px 0;">
+                <h4 style="margin-bottom: 3px; color: #1e3a8a; font-size: 0.8em;">分析参数设置</h4>
+                <div class="search-row" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                    <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 300px;">
+                        <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">分析时间段</label>
+                        <select id="timeRangeType" onchange="updateTimeRangeDescription()" style="flex: 1; min-width: 200px;">
+                            <option value="recent">八个月前至今</option>
+                            <option value="qualification">一年两个月至今</option>
+                        </select>
+                    </div>
+                    <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 200px;">
+                        <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">筛选条件</label>
+                        <select id="filterCondition" onchange="updateTimeRangeDescription(); toggleTableColumns();" style="flex: 1; min-width: 150px;">
+                            <option value="count2">扣分次数 ≥ 2次</option>
+                            <option value="count1">扣分次数 = 1次</option>
+                            <option value="lifesentence">余刑为无期</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="timeRangeDescription" style="margin-top: 4px; padding: 4px; background: #dbeafe; border-radius: 2px; color: #1e3a8a; font-size: 10px;">
+                    将分析近半年（当前日期往前半年）内扣分次数大于等于2次的人员
+                </div>
+            </div>
+
+            <div id="analysis-content" style="display: none;">
+                <div class="stats">
+                    <div class="stat-card" style="text-align: center;">
+                        <h3 id="analysisDeductionLabel" style="margin-bottom: 2px; font-size: 18px;">扣分次数≥2次人数</h3>
+                        <div class="stat-card number" id="analysisDeduction" style="font-size: 24px;">0</div>
+                    </div>
+                </div>
+
+
+
+
+                <div class="export-buttons admin-only">
+                    <button class="btn btn-success" onclick="exportAnalysisData()">📥 导出分析结果</button>
+                    <button class="btn btn-success" onclick="exportAnalysisReport()">📊 导出分析报告</button>
+                </div>
+
+                <div id="analysisTableContainer">
+                    <table class="data-table" id="analysisTable">
+                        <colgroup>
+                            <col style="width: 60px;">  <!-- 序号 -->
+                            <col style="width: 80px;">  <!-- 姓名 -->
+                            <col style="width: 100px;"> <!-- 囚号 -->
+                            <col class="crime-column" style="display: none; width: 180px;"> <!-- 罪名 -->
+                            <col style="width: 150px;"> <!-- 分析时间段 -->
+                            <col style="width: 100px;"> <!-- 总扣分 -->
+                            <col style="width: 120px;"> <!-- 扣分记录数 -->
+                            <col style="width: 180px;"> <!-- 减刑推测结论 -->
+                            <col style="width: 150px;"> <!-- 备注 -->
+                            <col style="width: 80px;">  <!-- 操作 -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>姓名</th>
+                                <th>囚号</th>
+                                <th class="crime-column" style="display: none;">罪名</th>
+                                <th>分析时间段</th>
+                                <th>总扣分</th>
+                                <th>扣分记录数</th>
+                                <th>减刑推测结论</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysisTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控制区域 -->
+                <div class="pagination" id="analysisPagination">
+                    <button onclick="prevAnalysisPage()" id="prevAnalysisBtn">上一页</button>
+                    <span id="analysisPageInfo">第 1 页，共 1 页</span>
+                    <button onclick="nextAnalysisPage()" id="nextAnalysisBtn">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件管理标签页（管理员专用） -->
+        <div id="upload-tab" class="tab-content admin-only">
+            <div class="file-upload-section">
+                <h4 style="margin-bottom: 6px; color: #1e3a8a; font-size: 1.1em; font-weight: 600;">📁 文件上传转换</h4>
+                <p style="margin-bottom: 12px; color: #64748b; font-size: 0.9em;">
+                    支持上传Excel文件(.xlsx/.xls)，系统将自动识别文件类型并转换为JSON格式
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
+                    <label for="screeningFile" class="file-label">
+                        上传减刑筛查文件
+                        <input type="file" id="screeningFile" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload('screening', this)">
+                    </label>
+                    
+                    <label for="scoreFile" class="file-label">
+                        上传加扣分文件
+                        <input type="file" id="scoreFile" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload('score', this)">
+                    </label>
+                    
+                    <label for="recommendationFile" class="file-label">
+                        上传推荐榜文件
+                        <input type="file" id="recommendationFile" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload('recommendation', this)">
+                    </label>
+                    
+                    <label for="remainingFile" class="file-label">
+                        上传余刑文件
+                        <input type="file" id="remainingFile" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload('remaining', this)">
+                    </label>
+                </div>
+                
+                <div id="uploadResults" style="margin-top: 15px; display: none;">
+                    <h5 style="color: #1e3a8a; margin-bottom: 10px; font-size: 1em;">转换结果：</h5>
+                    <div id="convertedFiles" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <!-- 转换结果将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 等待裁定扣分标签页 -->
+        <div id="waiting-tab" class="tab-content visitor-only">
+            <div class="search-section" style="margin: 3px 0;">
+                <h4 style="margin-bottom: 2px; color: #1e3a8a; font-size: 0.8em;">等待裁定扣分分析</h4>
+                <div class="search-row">
+                    <div class="search-item" style="display: flex; align-items: center; gap: 8px;">
+                        <label style="margin: 0; white-space: nowrap;">分析申报月份</label>
+                        <select id="waitingMonth" onchange="updateWaitingDescription()" style="flex: 1; min-width: 120px;">
+                            <!-- 月份选项将通过JavaScript动态生成 -->
+                        </select>
+                    </div>
+                </div>
+                <div id="waitingDescription" style="margin-top: 2px; padding: 2px 4px; background: #dbeafe; border-radius: 2px; color: #1e3a8a; font-size: 12px;">
+                    正在加载月份选项...
+                </div>
+            </div>
+
+            <div id="waiting-content" style="display: none;">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>推荐人员总数</h3>
+                        <div class="stat-card number" id="waitingTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>有扣分记录人数</h3>
+                        <div class="stat-card number" id="waitingDeduction">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>扣分人员占比</h3>
+                        <div class="stat-card number" id="waitingPercentage">0%</div>
+                    </div>
+                </div>
+
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <colgroup>
+                            <col style="width: 60px;">  <!-- 序号 -->
+                            <col style="width: 80px;">  <!-- 姓名 -->
+                            <col style="width: 100px;"> <!-- 囚号 -->
+                            <col style="width: 120px;"> <!-- 剩余刑期 -->
+                            <col style="width: 150px;"> <!-- 提请幅度 -->
+                            <col style="width: 150px;"> <!-- 分监区 -->
+                            <col style="width: 180px;"> <!-- 分析时间段 -->
+                            <col style="width: 100px;"> <!-- 11个月内扣分次数 -->
+                            <col style="width: 70px;">  <!-- 总扣分 -->
+                            <col style="width: 120px;"> <!-- 扣分详情 -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>姓名</th>
+                                <th>囚号</th>
+                                <th>剩余刑期</th>
+                                <th>提请幅度</th>
+                                <th>分监区</th>
+                                <th>分析时间段</th>
+                                <th>11个月内扣分次数</th>
+                                <th>总扣分</th>
+                                <th>扣分详情</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waitingTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控制区域 -->
+                <div class="pagination" id="waitingPagination">
+                    <button onclick="prevWaitingPage()" id="prevWaitingBtn">上一页</button>
+                    <span id="waitingPageInfo">第 1 页，共 1 页</span>
+                    <button onclick="nextWaitingPage()" id="nextWaitingBtn">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 减刑筛查数据标签页 -->
+        <div id="screening-tab" class="tab-content visitor-only">
+
+            <div id="screening-content" style="display: none;">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>总记录数</h3>
+                        <div class="stat-card number" id="screeningTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>符合减刑条件</h3>
+                        <div class="stat-card number" id="screeningEligible">0</div>
+                    </div>
+                </div>
+
+                <div class="search-section">
+                    <div class="search-row" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                        <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 200px;">
+                            <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">姓名/囚号</label>
+                            <input type="text" id="screeningSearch" placeholder="输入姓名、囚号或姓名首字母" oninput="debouncedFilterScreeningData()" style="flex: 1; min-width: 120px;">
+                        </div>
+                        <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 150px;">
+                            <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">罪名</label>
+                            <select id="screeningCrime" onchange="filterScreeningData()" style="flex: 1; min-width: 100px;">
+                                <option value="">全部罪名</option>
+                            </select>
+                        </div>
+                        <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 150px;">
+                            <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">减刑推测结论</label>
+                            <select id="screeningConclusion" onchange="filterScreeningData()" style="flex: 1; min-width: 100px;">
+                                <option value="">全部结论</option>
+                                <option value="符合申报条件">符合申报条件</option>
+                                <option value="立即启动">立即启动</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="search-item button-group" style="margin: auto; display: flex; align-items: center; justify-content: center; padding: 8px;">
+                            <button class="btn btn-secondary" onclick="resetScreeningFilters()" style="padding: 8px 16px; font-size: 1em;">🔄 重置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons admin-only">
+                    <button class="btn btn-success" onclick="exportScreeningData()">📥 导出数据</button>
+                </div>
+
+                <div id="screeningTableContainer">
+                    <table class="data-table" id="screeningTable">
+                        <colgroup>
+                            <col style="width: 60px;">  <!-- 序号 -->
+                            <col style="width: 80px;">  <!-- 姓名 -->
+                            <col style="width: 100px;"> <!-- 囚号 -->
+                            <col style="width: 180px;"> <!-- 罪名 -->
+                            <col style="width: 100px;"> <!-- 原判刑期 -->
+                            <col style="width: 100px;"> <!-- 减刑次数 -->
+                            <col style="width: 100px;"> <!-- 考核月数 -->
+                            <col style="width: 180px;"> <!-- 减刑推测结论 -->
+                            <col style="width: 150px;"> <!-- 备注 -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>姓名</th>
+                                <th>囚号</th>
+                                <th>罪名</th>
+                                <th>原判刑期</th>
+                                <th>减刑次数</th>
+                                <th>考核月数</th>
+                                <th>减刑推测结论</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="screeningTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控制区域 -->
+                <div class="pagination" id="screeningPagination">
+                    <button onclick="prevScreeningPage()" id="prevScreeningBtn">上一页</button>
+                    <span id="screeningPageInfo">第 1 页，共 1 页</span>
+                    <button onclick="nextScreeningPage()" id="nextScreeningBtn">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加扣分公示表标签页 -->
+        <div id="score-tab" class="tab-content visitor-only">
+
+            <div id="score-content" style="display: none;">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>总记录数</h3>
+                        <div class="stat-card number" id="scoreTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>扣分记录</h3>
+                        <div class="stat-card number" id="scoreDeduction">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>涉及罪犯数</h3>
+                        <div class="stat-card number" id="scorePrisoners">0</div>
+                    </div>
+                </div>
+
+                <div class="search-section">
+                    <div class="search-row">
+                        <div class="search-item">
+                            <label>罪犯编号/姓名</label>
+                            <input type="text" id="scoreSearch" placeholder="输入编号、姓名或姓名首字母" oninput="debouncedFilterScoreData()">
+                        </div>
+                        <div class="search-item">
+                            <label>所属分监区</label>
+                            <select id="scorePrison" onchange="filterScoreData()">
+                                <option value="">全部分监区</option>
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <label>扣分类别</label>
+                            <select id="scoreCategory" onchange="filterScoreData()">
+                                <option value="">全部类别</option>
+                            </select>
+                        </div>
+                        <div class="search-item" style="min-width: 200px;">
+                            <label>创建时间</label>
+                            <input type="date" id="scoreDateFrom" style="width: 60%;" onchange="validateScoreDateRange(); filterScoreData()">
+                            <span>至</span>
+                            <input type="date" id="scoreDateTo" style="width: 60%;" onchange="validateScoreDateRange(); filterScoreData()">
+                        </div>
+                        <div class="search-item" style="min-width: 180px;">
+                            <label>扣分分值</label>
+                            <input type="number" id="scoreValueMin" placeholder="最小值" style="width: 48%;" oninput="debouncedFilterScoreData()">
+                            <span>至</span>
+                            <input type="number" id="scoreValueMax" placeholder="最大值" style="width: 48%;" oninput="debouncedFilterScoreData()">
+                        </div>
+                        <div class="search-item button-group">
+                            <button class="btn btn-secondary" onclick="resetScoreFilters()">🔄 重置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons admin-only">
+                    <button class="btn btn-success" onclick="exportScoreData()">📥 导出数据</button>
+                </div>
+
+                <div id="scoreTableContainer">
+                    <table class="data-table" id="scoreTable">
+                        <colgroup>
+                            <col style="width: 60px;">  <!-- 序号 -->
+                            <col style="width: 100px;"> <!-- 罪犯编号 -->
+                            <col style="width: 80px;">  <!-- 罪犯姓名 -->
+                            <col style="width: 100px;"> <!-- 所属分监区 -->
+                            <col style="width: 120px;"> <!-- 创建时间 -->
+                            <col style="width: 200px;"> <!-- 事实 -->
+                            <col style="width: 80px;">  <!-- 类型 -->
+                            <col style="width: 80px;">  <!-- 类别 -->
+                            <col style="width: 60px;">  <!-- 分值 -->
+                            <col style="width: 80px;">  <!-- 创建人 -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>罪犯编号</th>
+                                <th>罪犯姓名</th>
+                                <th>所属分监区</th>
+                                <th>创建时间</th>
+                                <th>事实</th>
+                                <th>类型</th>
+                                <th>类别</th>
+                                <th>分值</th>
+                                <th>创建人</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控制区域 -->
+                <div class="pagination" id="scorePagination">
+                    <button onclick="prevScorePage()" id="prevScoreBtn">上一页</button>
+                    <span id="scorePageInfo">第 1 页，共 1 页</span>
+                    <button onclick="nextScorePage()" id="nextScoreBtn">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 刑务工作指引标签页 -->
+        <div id="guidance-tab" class="tab-content visitor-only">
+            <div class="guidance-container">
+                <h2 style="text-align: center; color: #1e3a8a; margin-bottom: 20px;">刑务工作指引</h2>
+                <div class="guidance-cards">
+                    <div class="guidance-card" onclick="openGuidancePage('meeting-minutes')">
+                        <div class="card-icon">📋</div>
+                        <h3>2024年省法院、检察院、公安厅、司法厅、监狱局联席会议纪要</h3>
+                        <p>查看联席会议纪要内容</p>
+                    </div>
+                    <div class="guidance-card" onclick="openGuidancePage('important-notes')">
+                        <div class="card-icon">📝</div>
+                        <h3>重要记事汇总</h3>
+                        <p>截止至2024年4月2日重要记事汇总</p>
+                    </div>
+                    <div class="guidance-card" onclick="openGuidancePage('sentence-reduction-requirements')">
+                        <div class="card-icon">⚖️</div>
+                        <h3>减刑起始间隔时间和幅度从严的要求</h3>
+                        <p>现行有关减刑起始间隔时间和幅度从严的要求（2025.7.18）</p>
+                    </div>
+                    <div class="guidance-card" onclick="openGuidancePage('implementation-rules')">
+                        <div class="card-icon">📖</div>
+                        <h3>关于办理减刑、假释案件的实施细则</h3>
+                        <p>2019年实施细则</p>
+                    </div>
+                    <div class="guidance-card" onclick="openGuidancePage('sentence-reduction-conditions')">
+                        <div class="card-icon">📊</div>
+                        <h3>减刑条件说明</h3>
+                        <p>减刑条件详细说明</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 版权信息 -->
+    <footer class="copyright-footer">
+        <p class="footer-text">作者：惠州监狱十五监区</p>
+        <div class="real-time-clock" id="realTimeClock">
+            <span class="clock-time" id="clockTime">00:00:00</span>
+            <span class="clock-date" id="clockDate">2025-01-01</span>
+        </div>
+        <div class="easter-eggs">
+            <span class="easter-egg-item" id="egg1" title="点击有惊喜">✨</span>
+            <span class="easter-egg-item" id="egg2" title="点击有惊喜">🎉</span>
+            <span class="easter-egg-item" id="egg3" title="点击有惊喜">💡</span>
+        </div>
+    </footer>
+
+    <!-- 引用XLSX库用于Excel文件处理 -->
+    <script src="asset/js/xlsx.full.min.js"></script>
+    
+    <!-- 引入拼音转换库 -->
+    <script src="asset/js/select2-pinyin-master/pinyin.js"></script>
+    
+    <!-- 引入外部JavaScript模块 -->
+    <script src="asset/js/common.js"></script>
+    <script src="asset/js/analysis-tab.js"></script>
+    <script src="asset/js/waiting-tab.js"></script>
+    <script src="asset/js/screening-tab.js"></script>
+    <script src="asset/js/score-tab.js"></script>
+    
+    <!-- 加载余刑数据 -->
+    <script src="asset/js/load-data.js"></script>
+
+    <script>
+        // 初始化 - 页面加载完成后自动加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            autoLoadAllData();
+        });
+    </script>
+
+    <!-- 登录表单 -->
+    <div id="loginForm" class="login-form">
+        <h3>管理员登录</h3>
+        <input type="text" id="username" placeholder="用户名" value="admin" onkeydown="handleLoginKeyPress(event)">
+        <input type="password" id="password" placeholder="密码" value="admin123" onkeydown="handleLoginKeyPress(event)">
+        <button onclick="login()">登录</button>
+        <button onclick="hideLoginForm()" class="cancel-btn">取消</button>
+    </div>
+
+    <!-- 退出提示弹窗 -->
+    <div id="logoutMessage" class="logout-message" style="display: none;">
+        <div class="logout-content">
+            <div class="logout-icon">✓</div>
+            <h3>已退出管理员模式</h3>
+            <p>您已成功退出管理员模式，现在以访客身份访问系统。</p>
+            <button onclick="closeLogoutMessage()">确定</button>
+        </div>
+    </div>
+
+    <script>
+        // 处理登录表单的回车键
+        function handleLoginKeyPress(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault(); // 防止默认行为
+                login();
+            }
+        }
+
+        // 实时时间更新
+        function updateRealTime() {
+            var now = new Date();
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            var weekday = weekdays[now.getDay()];
+
+            var clockTimeEl = document.getElementById('clockTime');
+            var clockDateEl = document.getElementById('clockDate');
+
+            if (clockTimeEl) {
+                clockTimeEl.textContent = hours + ':' + minutes + ':' + seconds;
+            }
+            if (clockDateEl) {
+                clockDateEl.textContent = year + '-' + month + '-' + day + ' 星期' + weekday;
+            }
+        }
+
+        // 初始化实时时钟
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRealTime();
+            setInterval(updateRealTime, 1000);
+        });
+
+        // 彩蛋点击效果
+        function createParticle(x, y, emoji) {
+            var particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.textContent = emoji;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.body.appendChild(particle);
+
+            setTimeout(function() {
+                particle.remove();
+            }, 1500);
+        }
+
+        function handleEasterEggClick(event, eggId) {
+            var egg = document.getElementById(eggId);
+            if (!egg) return;
+
+            // 添加点击动画
+            egg.classList.add('easter-egg-click');
+            setTimeout(function() {
+                egg.classList.remove('easter-egg-click');
+            }, 600);
+
+            // 创建粒子效果
+            var rect = egg.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top + rect.height / 2;
+            
+            var emojis = ['✨', '⭐', '💫', '🌟', '🎊', '🎈', '🎁', '🎀'];
+            var clickedEmoji = egg.textContent;
+
+            // 创建多个粒子
+            for (var i = 0; i < 8; i++) {
+                (function(index) {
+                    setTimeout(function() {
+                        var randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        var offsetX = (Math.random() - 0.5) * 100;
+                        var offsetY = (Math.random() - 0.5) * 100;
+                        createParticle(x + offsetX, y + offsetY, randomEmoji);
+                    }, index * 50);
+                })(i);
+            }
+
+            // 显示不同的消息
+            var messages = {
+                'egg1': ['✨ 愿你的每一天都闪闪发光！', '✨ 加油！你是最棒的！', '✨ 今天也要元气满满哦！'],
+                'egg2': ['🎉 恭喜你发现了彩蛋！', '🎉 生活需要一点小惊喜！', '🎉 愿你每天都充满欢乐！'],
+                'egg3': ['💡 灵感一闪而过！', '💡 保持好奇心！', '💡 智慧如光，照亮前路！']
+            };
+
+            var messageList = messages[eggId] || ['🎊 发现了彩蛋！'];
+            var randomMessage = messageList[Math.floor(Math.random() * messageList.length)];
+
+            // 创建临时提示消息
+            var toast = document.createElement('div');
+            toast.textContent = randomMessage;
+            toast.style.position = 'fixed';
+            toast.style.top = '50%';
+            toast.style.left = '50%';
+            toast.style.transform = 'translate(-50%, -50%)';
+            toast.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%)';
+            toast.style.color = 'white';
+            toast.style.padding = '20px 40px';
+            toast.style.borderRadius = '12px';
+            toast.style.fontSize = '18px';
+            toast.style.fontWeight = '600';
+            toast.style.zIndex = '10000';
+            toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            toast.style.animation = 'fadeInOut 2s ease-out forwards';
+            toast.style.pointerEvents = 'none';
+            document.body.appendChild(toast);
+
+            setTimeout(function() {
+                toast.remove();
+            }, 2000);
+        }
+
+        // 添加CSS动画
+        var style = document.createElement('style');
+        style.textContent = '@keyframes fadeInOut {' +
+            '0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }' +
+            '20%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }' +
+            '100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }' +
+        '}';
+        document.head.appendChild(style);
+
+        // 绑定彩蛋点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            var eggs = ['egg1', 'egg2', 'egg3'];
+            for (var i = 0; i < eggs.length; i++) {
+                var eggId = eggs[i];
+                var egg = document.getElementById(eggId);
+                if (egg) {
+                    egg.addEventListener('click', function(e) {
+                        handleEasterEggClick(e, eggId);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
