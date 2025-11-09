@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>减刑预警工具</title>
+    <title>减刑预警系统</title>
     <!-- Favicon设置 -->
     <link rel="icon" href="asset/images/icon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="asset/images/icon.ico" type="image/x-icon">
@@ -334,7 +334,7 @@
             </div>
             <div class="header-content">
                 <img src="asset/images/icon.ico" alt="系统图标" class="header-icon">
-                <h1>减刑预警工具</h1>
+                <h1>减刑预警系统</h1>
             </div>
         </div>
 
@@ -376,8 +376,8 @@
                     <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 300px;">
                         <label style="margin: 0; white-space: nowrap; font-size: 0.9em;">分析时间段</label>
                         <select id="timeRangeType" onchange="updateTimeRangeDescription()" style="flex: 1; min-width: 200px;">
-                            <option value="recent">八个月前至今</option>
-                            <option value="qualification">一年两个月至今</option>
+                            <option value="recent">考核期止日前半年至今</option>
+                            <option value="qualification">考核期止日前一年至今</option>
                         </select>
                     </div>
                     <div class="search-item" style="display: flex; align-items: center; gap: 6px; min-width: 200px;">
@@ -760,27 +760,22 @@
                 <h2 style="text-align: center; color: #1e3a8a; margin-bottom: 20px;">刑务工作指引</h2>
                 <div class="guidance-cards">
                     <div class="guidance-card" onclick="openGuidancePage('meeting-minutes')">
-                        <div class="card-icon">📋</div>
                         <h3>2024年省法院、检察院、公安厅、司法厅、监狱局联席会议纪要</h3>
                         <p>查看联席会议纪要内容</p>
                     </div>
                     <div class="guidance-card" onclick="openGuidancePage('important-notes')">
-                        <div class="card-icon">📝</div>
                         <h3>重要记事汇总</h3>
                         <p>截止至2024年4月2日重要记事汇总</p>
                     </div>
                     <div class="guidance-card" onclick="openGuidancePage('sentence-reduction-requirements')">
-                        <div class="card-icon">⚖️</div>
                         <h3>减刑起始间隔时间和幅度从严的要求</h3>
                         <p>现行有关减刑起始间隔时间和幅度从严的要求（2025.7.18）</p>
                     </div>
                     <div class="guidance-card" onclick="openGuidancePage('implementation-rules')">
-                        <div class="card-icon">📖</div>
                         <h3>关于办理减刑、假释案件的实施细则</h3>
                         <p>2019年实施细则</p>
                     </div>
                     <div class="guidance-card" onclick="openGuidancePage('sentence-reduction-conditions')">
-                        <div class="card-icon">📊</div>
                         <h3>减刑条件说明</h3>
                         <p>减刑条件详细说明</p>
                     </div>
